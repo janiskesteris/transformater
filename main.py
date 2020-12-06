@@ -22,9 +22,6 @@ if __name__ == "__main__":
     end = time.time()
     LOGGER.info("total execution time: {}s".format(round(end - start, 3)))
 
-# TODO add flake8 tests and config
-# can connect to HDFS cluster
-
 # nice to have
 # TODO setup socket connection between readers and writers
 

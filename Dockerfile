@@ -7,6 +7,9 @@ COPY . .
 # run tests
 # docker run -it bm_product_catalog_etl pytest /tests
 
+# run flake8
+# docker run -it bm_product_catalog_etl flake8 /bm_product_catalog_etl
+
 # run script
 # docker run -it bm_product_catalog_etl python main.py --s3_bucket=backmarket-data-jobs --s3_file_path=data/product_catalog.csv
 # docker run -it bm_product_catalog_etl python main.py
