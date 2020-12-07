@@ -1,16 +1,16 @@
-from bm_product_catalog_etl.s3_file_downloader import S3FileDownloader
-from bm_product_catalog_etl.input_stream_reader import InputStreamReader
-from bm_product_catalog_etl.output_stream_writer import OutputStreamWriter
-from bm_product_catalog_etl.product_data_cleaner import ProductDataCleaner
-from bm_product_catalog_etl.config import LOGGER
+from .s3_file_downloader import S3FileDownloader
+from .input_stream_reader import InputStreamReader
+from .output_stream_writer import OutputStreamWriter
+from .product_data_cleaner import ProductDataCleaner
+from .config import LOGGER
 
 
-class BmProductCatalogEtl:
+class Transformater:
     def __init__(self, s3_bucket, s3_file_path):
         self.s3_bucket = s3_bucket
         self.s3_file_path = s3_file_path
 
-    def run(self):
+    def transform(self):
         try:
             local_file_path = self.__download_file()
 

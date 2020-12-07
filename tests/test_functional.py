@@ -5,25 +5,25 @@ import pyarrow.parquet as pq
 import pyarrow.csv as csv
 import numpy as np
 from unittest import mock
-from bm_product_catalog_etl.config import ROOT_DIR
-from bm_product_catalog_etl.input_stream_reader import InputStreamReader
+from transformater.config import ROOT_DIR
+from transformater.input_stream_reader import InputStreamReader
 
 test_data_path = os.path.join(ROOT_DIR, "..", "tests", "data")
 fixture_path = os.path.join(ROOT_DIR, "..", "tests", "fixtures")
 
 
 def test_integration():
-    with mock.patch("bm_product_catalog_etl.config.DATA_DIR", test_data_path):
+    with mock.patch("transformater.config.DATA_DIR", test_data_path):
         # mock cleanup for test comparison
         with mock.patch.object(InputStreamReader, "cleanup"):
-            from bm_product_catalog_etl.bm_product_catalog_etl import (
-                BmProductCatalogEtl,
+            from transformater.transformater import (
+                Transformater,
             )
 
-            etl = BmProductCatalogEtl(
+            etl = Transformater(
                 "backmarket-data-jobs", "data/product_catalog.csv"
             )
-            etl.run()
+            etl.transform()
 
             raw_csv = csv.read_csv(os.path.join(test_data_path, "product_catalog.csv"))
             valid_table = pq.read_table(

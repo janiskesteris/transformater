@@ -4,7 +4,7 @@ import os
 import timeout_decorator
 from retry import retry
 
-from bm_product_catalog_etl.config import DATA_DIR, LOGGER
+from .config import DATA_DIR, LOGGER
 
 
 class S3FileDownloader:
