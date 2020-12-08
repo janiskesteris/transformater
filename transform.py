@@ -1,31 +1,53 @@
 import time
 from optparse import OptionParser
-from transformater.transformater import Transformater
+import os
+import timeout_decorator
+from retry import retry
+from pyarrow import fs
+
+from transformater.input_stream_reader import InputStreamReader
+from transformater.output_stream_writer import OutputStreamWriter
+from transformater.product_data_cleaner import ProductDataCleaner
 from transformater.config import LOGGER
 
+def transform(s3_bucket, s3_file_path, s3_region):
+    try:
+        file_stream = s3_file_stream(s3_bucket, s3_file_path, s3_region)
 
-from pyarrow import fs
-from pyarrow import csv
-# s3 = fs.S3FileSystem(region='eu-west-1', anonymous=True)
-# f = s3.open_input_stream('backmarket-data-jobs/data/product_catalog.csv')
+        input_stream_reader = InputStreamReader(file_stream)
+        input_stream_reader.validate_schema()
+        LOGGER.info("schema validated")
 
-# s3 = fs.S3FileSystem(region='eu-central-1', anonymous=True)
-# f = s3.open_input_stream('janis-test-bucket/product_catalog_big.csv')
-# start = time.time()
-# csv.open_csv(f)
-# end = time.time()
-# LOGGER.info("total execution time: {}s".format(round(end - start, 3)))
-# exit()
+        output_stream_writer = OutputStreamWriter(input_stream_reader.schema)
+        product_data_cleaner = ProductDataCleaner()
 
-# [method_name for method_name in dir(f) if callable(getattr(f, method_name))]
-# [method_name for method_name in dir(s3) if callable(getattr(s3, method_name))]
-# f
+        rows_processed = 0
+        for i, batch in input_stream_reader.batches():
+            valid_batch, invalid_batch = product_data_cleaner.filter(batch)
+            output_stream_writer.write(valid_batch, invalid_batch)
+            rows_processed += batch.num_rows
+            LOGGER.info(
+                "batch {} processed, total processed rows: {}".format(
+                    i, rows_processed
+                )
+            )
+    finally:
+        file_stream.close()
+        if "output_stream_writer" in locals():
+            output_stream_writer.close()
+        LOGGER.info("cleanup completed")
 
+def s3_file_stream(s3_bucket, s3_file_path, s3_region):
+    s3_client = fs.S3FileSystem(region=s3_region, anonymous=True)
+    return s3_client.open_input_stream('{}/{}'.format(s3_bucket, s3_file_path))
 
 if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option(
         "-b", "--s3_bucket", help="S3 bucket name", default="backmarket-data-jobs"
+    )
+    parser.add_option(
+        "-r", "--s3_region", help="S3 bucket region", default="eu-west-1"
     )
     parser.add_option(
         "-f",
@@ -36,7 +58,7 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
 
     start = time.time()
-    Transformater(options.s3_bucket, options.s3_file_path).transform()
+    transform(options.s3_bucket, options.s3_file_path, options.s3_region)
     end = time.time()
     LOGGER.info("total execution time: {}s".format(round(end - start, 3)))
 

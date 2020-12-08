@@ -4,8 +4,8 @@ import os
 
 
 class InputStreamReader:
-    def __init__(self, local_file_path):
-        self.local_file_path = local_file_path
+    def __init__(self, file_stream):
+        self.file_stream = file_stream
         self._stream = None
 
     def batches(self):
@@ -21,10 +21,6 @@ class InputStreamReader:
         if not self.schema.equals(self.__expected_schema()):
             raise Exception("Invalid scehma for input CSV file")
 
-    def cleanup(self):
-        if os.path.exists(self.local_file_path):
-            os.remove(self.local_file_path)
-
     def __expected_schema(self):
         schema_file_path = os.path.join(ROOT_DIR, "schema")
         return pyarrow.parquet.read_schema(schema_file_path)
@@ -38,7 +34,5 @@ class InputStreamReader:
         if not self._stream:
             # block size for 10mb batches
             read_options = pyarrow.csv.ReadOptions(block_size=10000000)
-            self._stream = pyarrow.csv.open_csv(
-                self.local_file_path, read_options=read_options
-            )
+            self._stream = pyarrow.csv.open_csv(self.file_stream, read_options=read_options)
         return self._stream

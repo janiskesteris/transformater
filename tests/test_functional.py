@@ -2,7 +2,6 @@ import os
 import glob
 import pytest
 import pyarrow.parquet as pq
-import pyarrow.csv as csv
 import numpy as np
 from unittest import mock
 from transformater.config import ROOT_DIR
@@ -15,38 +14,35 @@ fixture_path = os.path.join(ROOT_DIR, "..", "tests", "fixtures")
 def test_integration():
     with mock.patch("transformater.config.DATA_DIR", test_data_path):
         # mock cleanup for test comparison
-        with mock.patch.object(InputStreamReader, "cleanup"):
-            from transformater.transformater import (
-                Transformater,
-            )
+        s3_bucker, s3_file_path, s3_region = (
+            "backmarket-data-jobs",
+            "data/product_catalog.csv",
+            "eu-west-1",
+        )
 
-            etl = Transformater(
-                "backmarket-data-jobs", "data/product_catalog.csv"
-            )
-            etl.transform()
+        from transform import transform
 
-            raw_csv = csv.read_csv(os.path.join(test_data_path, "product_catalog.csv"))
-            valid_table = pq.read_table(
-                os.path.join(test_data_path, "valid_products.parquet")
-            )
-            invalid_table = pq.read_table(
-                os.path.join(test_data_path, "invalid_products.parquet")
-            )
+        transform(s3_bucker, s3_file_path, s3_region)
+        valid_table = pq.read_table(
+            os.path.join(test_data_path, "valid_products.parquet")
+        )
+        invalid_table = pq.read_table(
+            os.path.join(test_data_path, "invalid_products.parquet")
+        )
 
-            # check valid and invalid product count adds up to initial
-            assert valid_table.num_rows + invalid_table.num_rows == raw_csv.num_rows
+        # check valid and invalid product count adds up to initial
+        assert valid_table.num_rows + invalid_table.num_rows == 1000
 
-            # check if valid product count is correct
-            assert (
-                valid_table.to_pandas()["image"].replace("", np.nan).dropna().count()
-                == valid_table.num_rows
-            )
+        # check if valid product count is correct
+        assert (
+            valid_table.to_pandas()["image"].replace("", np.nan).dropna().count()
+            == valid_table.num_rows
+        )
 
-            # check that products in invalid set has no images
-            assert (
-                invalid_table.to_pandas()["image"].replace("", np.nan).dropna().count()
-                == 0
-            )
+        # check that products in invalid set has no images
+        assert (
+            invalid_table.to_pandas()["image"].replace("", np.nan).dropna().count() == 0
+        )
     cleanup()
 
 
