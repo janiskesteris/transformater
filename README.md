@@ -17,7 +17,7 @@ docker run -it transformater pytest /tests
 docker run -it transformater flake8 /transform.py /transformater
 ```
 
-### run script
+## Usage
 ```
 docker run -it transformater python transform.py
 ```
