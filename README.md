@@ -46,13 +46,13 @@ docker run -it transformater python transform.py --s3_bucket=janis-test-bucket -
 - ProductDataCleaner - performs product filtering for given batch
 - OutputStreamWriter - opens output stream and for each batch (valid/invalid) writes and output parquet file
 
--- diagram1 here
+![diag1](https://user-images.githubusercontent.com/2915290/101922445-63499300-3bce-11eb-8f43-71090bfe92f9.png)
 
 ### Extendability
 
 For each of the components code can be extended to support other source, parse and output formats. As well as seperating business logic from generic processing logic easier maintenence.
 
--- diagram2 here
+![diag2](https://user-images.githubusercontent.com/2915290/101922478-6c3a6480-3bce-11eb-85b4-43100cb83de4.png)
 
 I chose to write tranformatter project around pyarrow library for 3 reasones:
 1. support of parquest transofrmations
